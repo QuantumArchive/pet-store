@@ -7,4 +7,42 @@
     th, tr, td {
         outline: 1px black solid;
     }
+
+    thead {
+        font-weight: bold;
+
+        th {
+            &.sorted:after {
+                content: "'^'";
+            }
+
+            &.sorted.desc:after {
+                content: "'v'"
+            }
+
+            cursor: pointer;
+        }
+    }
+
+    td {
+        &.ng-leave {
+            transition: opacity .5s ease-in-out;
+        }
+
+        &.ng-leave-active {
+            opacity: 0;
+        }
+    }
+}
+
+:local(.search) {
+    outline: dimgray 1px solid;
+    max-width: 50%;
+    text-align: center;
+    margin: 10px auto;
+    padding: 5px;
+
+    h4 {
+        margin: 0
+    }
 }

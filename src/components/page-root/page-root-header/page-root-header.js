@@ -15,4 +15,4 @@ function controller(userService) {
     this.styles = styles;
     this.logout = () => userService.logout();
     this.isAuthenticated = () => userService.isAuthenticated();
-}
+};

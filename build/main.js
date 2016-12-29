@@ -44,15 +44,15 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
 	
-	var _angular = __webpack_require__(1);
+	var _angular = __webpack_require__(2);
 	
 	var _angular2 = _interopRequireDefault(_angular);
 	
-	__webpack_require__(3);
+	__webpack_require__(4);
 	
-	var _components = __webpack_require__(7);
+	var _components = __webpack_require__(8);
 	
 	var _components2 = _interopRequireDefault(_components);
 	
@@ -113,22 +113,211 @@
 	// const link = 'https://pet-store-401.herokuapp.com/api/unauth';
 	var link = 'https://pet-store-401.herokuapp.com/api';
 	
-	app.value('apiUrl', link);
+	//constant a value but not a service and it's available before config so you can use
+	//process.env
+	app.constant('apiUrl', process.env.API_URL || link);
 	
 	app.config(_http2.default);
 	app.config(_routes2.default);
 	app.run(_auth2.default);
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	__webpack_require__(2);
-	module.exports = angular;
+	// shim for using process in browser
+	var process = module.exports = {};
+	
+	// cached from whatever global is present so that test runners that stub it
+	// don't break things.  But we need to wrap it in a try catch in case it is
+	// wrapped in strict mode code which doesn't define any globals.  It's inside a
+	// function because try/catches deoptimize in certain engines.
+	
+	var cachedSetTimeout;
+	var cachedClearTimeout;
+	
+	function defaultSetTimout() {
+	    throw new Error('setTimeout has not been defined');
+	}
+	function defaultClearTimeout () {
+	    throw new Error('clearTimeout has not been defined');
+	}
+	(function () {
+	    try {
+	        if (typeof setTimeout === 'function') {
+	            cachedSetTimeout = setTimeout;
+	        } else {
+	            cachedSetTimeout = defaultSetTimout;
+	        }
+	    } catch (e) {
+	        cachedSetTimeout = defaultSetTimout;
+	    }
+	    try {
+	        if (typeof clearTimeout === 'function') {
+	            cachedClearTimeout = clearTimeout;
+	        } else {
+	            cachedClearTimeout = defaultClearTimeout;
+	        }
+	    } catch (e) {
+	        cachedClearTimeout = defaultClearTimeout;
+	    }
+	} ())
+	function runTimeout(fun) {
+	    if (cachedSetTimeout === setTimeout) {
+	        //normal enviroments in sane situations
+	        return setTimeout(fun, 0);
+	    }
+	    // if setTimeout wasn't available but was latter defined
+	    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+	        cachedSetTimeout = setTimeout;
+	        return setTimeout(fun, 0);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedSetTimeout(fun, 0);
+	    } catch(e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+	            return cachedSetTimeout.call(null, fun, 0);
+	        } catch(e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+	            return cachedSetTimeout.call(this, fun, 0);
+	        }
+	    }
+	
+	
+	}
+	function runClearTimeout(marker) {
+	    if (cachedClearTimeout === clearTimeout) {
+	        //normal enviroments in sane situations
+	        return clearTimeout(marker);
+	    }
+	    // if clearTimeout wasn't available but was latter defined
+	    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+	        cachedClearTimeout = clearTimeout;
+	        return clearTimeout(marker);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedClearTimeout(marker);
+	    } catch (e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+	            return cachedClearTimeout.call(null, marker);
+	        } catch (e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+	            return cachedClearTimeout.call(this, marker);
+	        }
+	    }
+	
+	
+	
+	}
+	var queue = [];
+	var draining = false;
+	var currentQueue;
+	var queueIndex = -1;
+	
+	function cleanUpNextTick() {
+	    if (!draining || !currentQueue) {
+	        return;
+	    }
+	    draining = false;
+	    if (currentQueue.length) {
+	        queue = currentQueue.concat(queue);
+	    } else {
+	        queueIndex = -1;
+	    }
+	    if (queue.length) {
+	        drainQueue();
+	    }
+	}
+	
+	function drainQueue() {
+	    if (draining) {
+	        return;
+	    }
+	    var timeout = runTimeout(cleanUpNextTick);
+	    draining = true;
+	
+	    var len = queue.length;
+	    while(len) {
+	        currentQueue = queue;
+	        queue = [];
+	        while (++queueIndex < len) {
+	            if (currentQueue) {
+	                currentQueue[queueIndex].run();
+	            }
+	        }
+	        queueIndex = -1;
+	        len = queue.length;
+	    }
+	    currentQueue = null;
+	    draining = false;
+	    runClearTimeout(timeout);
+	}
+	
+	process.nextTick = function (fun) {
+	    var args = new Array(arguments.length - 1);
+	    if (arguments.length > 1) {
+	        for (var i = 1; i < arguments.length; i++) {
+	            args[i - 1] = arguments[i];
+	        }
+	    }
+	    queue.push(new Item(fun, args));
+	    if (queue.length === 1 && !draining) {
+	        runTimeout(drainQueue);
+	    }
+	};
+	
+	// v8 likes predictible objects
+	function Item(fun, array) {
+	    this.fun = fun;
+	    this.array = array;
+	}
+	Item.prototype.run = function () {
+	    this.fun.apply(null, this.array);
+	};
+	process.title = 'browser';
+	process.browser = true;
+	process.env = {};
+	process.argv = [];
+	process.version = ''; // empty string to avoid regexp issues
+	process.versions = {};
+	
+	function noop() {}
+	
+	process.on = noop;
+	process.addListener = noop;
+	process.once = noop;
+	process.off = noop;
+	process.removeListener = noop;
+	process.removeAllListeners = noop;
+	process.emit = noop;
+	
+	process.binding = function (name) {
+	    throw new Error('process.binding is not supported');
+	};
+	
+	process.cwd = function () { return '/' };
+	process.chdir = function (dir) {
+	    throw new Error('process.chdir is not supported');
+	};
+	process.umask = function() { return 0; };
 
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(3);
+	module.exports = angular;
+
+
+/***/ },
+/* 3 */
 /***/ function(module, exports) {
 
 	/**
@@ -33028,16 +33217,16 @@
 	!window.angular.$$csp().noInlineStyle && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>');
 
 /***/ },
-/* 3 */
+/* 4 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 4 */,
 /* 5 */,
 /* 6 */,
-/* 7 */
+/* 7 */,
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -33046,15 +33235,15 @@
 	    value: true
 	});
 	
-	var _angular = __webpack_require__(1);
+	var _angular = __webpack_require__(2);
 	
 	var _angular2 = _interopRequireDefault(_angular);
 	
-	var _camelcase = __webpack_require__(8);
+	var _camelcase = __webpack_require__(9);
 	
 	var _camelcase2 = _interopRequireDefault(_camelcase);
 	
-	var _path = __webpack_require__(9);
+	var _path = __webpack_require__(10);
 	
 	var _path2 = _interopRequireDefault(_path);
 	
@@ -33072,7 +33261,7 @@
 	exports.default = _module.name;
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -33127,7 +33316,7 @@
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -33355,193 +33544,7 @@
 	    }
 	;
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(10)))
-
-/***/ },
-/* 10 */
-/***/ function(module, exports) {
-
-	// shim for using process in browser
-	var process = module.exports = {};
-	
-	// cached from whatever global is present so that test runners that stub it
-	// don't break things.  But we need to wrap it in a try catch in case it is
-	// wrapped in strict mode code which doesn't define any globals.  It's inside a
-	// function because try/catches deoptimize in certain engines.
-	
-	var cachedSetTimeout;
-	var cachedClearTimeout;
-	
-	function defaultSetTimout() {
-	    throw new Error('setTimeout has not been defined');
-	}
-	function defaultClearTimeout () {
-	    throw new Error('clearTimeout has not been defined');
-	}
-	(function () {
-	    try {
-	        if (typeof setTimeout === 'function') {
-	            cachedSetTimeout = setTimeout;
-	        } else {
-	            cachedSetTimeout = defaultSetTimout;
-	        }
-	    } catch (e) {
-	        cachedSetTimeout = defaultSetTimout;
-	    }
-	    try {
-	        if (typeof clearTimeout === 'function') {
-	            cachedClearTimeout = clearTimeout;
-	        } else {
-	            cachedClearTimeout = defaultClearTimeout;
-	        }
-	    } catch (e) {
-	        cachedClearTimeout = defaultClearTimeout;
-	    }
-	} ())
-	function runTimeout(fun) {
-	    if (cachedSetTimeout === setTimeout) {
-	        //normal enviroments in sane situations
-	        return setTimeout(fun, 0);
-	    }
-	    // if setTimeout wasn't available but was latter defined
-	    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-	        cachedSetTimeout = setTimeout;
-	        return setTimeout(fun, 0);
-	    }
-	    try {
-	        // when when somebody has screwed with setTimeout but no I.E. maddness
-	        return cachedSetTimeout(fun, 0);
-	    } catch(e){
-	        try {
-	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-	            return cachedSetTimeout.call(null, fun, 0);
-	        } catch(e){
-	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-	            return cachedSetTimeout.call(this, fun, 0);
-	        }
-	    }
-	
-	
-	}
-	function runClearTimeout(marker) {
-	    if (cachedClearTimeout === clearTimeout) {
-	        //normal enviroments in sane situations
-	        return clearTimeout(marker);
-	    }
-	    // if clearTimeout wasn't available but was latter defined
-	    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-	        cachedClearTimeout = clearTimeout;
-	        return clearTimeout(marker);
-	    }
-	    try {
-	        // when when somebody has screwed with setTimeout but no I.E. maddness
-	        return cachedClearTimeout(marker);
-	    } catch (e){
-	        try {
-	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-	            return cachedClearTimeout.call(null, marker);
-	        } catch (e){
-	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-	            return cachedClearTimeout.call(this, marker);
-	        }
-	    }
-	
-	
-	
-	}
-	var queue = [];
-	var draining = false;
-	var currentQueue;
-	var queueIndex = -1;
-	
-	function cleanUpNextTick() {
-	    if (!draining || !currentQueue) {
-	        return;
-	    }
-	    draining = false;
-	    if (currentQueue.length) {
-	        queue = currentQueue.concat(queue);
-	    } else {
-	        queueIndex = -1;
-	    }
-	    if (queue.length) {
-	        drainQueue();
-	    }
-	}
-	
-	function drainQueue() {
-	    if (draining) {
-	        return;
-	    }
-	    var timeout = runTimeout(cleanUpNextTick);
-	    draining = true;
-	
-	    var len = queue.length;
-	    while(len) {
-	        currentQueue = queue;
-	        queue = [];
-	        while (++queueIndex < len) {
-	            if (currentQueue) {
-	                currentQueue[queueIndex].run();
-	            }
-	        }
-	        queueIndex = -1;
-	        len = queue.length;
-	    }
-	    currentQueue = null;
-	    draining = false;
-	    runClearTimeout(timeout);
-	}
-	
-	process.nextTick = function (fun) {
-	    var args = new Array(arguments.length - 1);
-	    if (arguments.length > 1) {
-	        for (var i = 1; i < arguments.length; i++) {
-	            args[i - 1] = arguments[i];
-	        }
-	    }
-	    queue.push(new Item(fun, args));
-	    if (queue.length === 1 && !draining) {
-	        runTimeout(drainQueue);
-	    }
-	};
-	
-	// v8 likes predictible objects
-	function Item(fun, array) {
-	    this.fun = fun;
-	    this.array = array;
-	}
-	Item.prototype.run = function () {
-	    this.fun.apply(null, this.array);
-	};
-	process.title = 'browser';
-	process.browser = true;
-	process.env = {};
-	process.argv = [];
-	process.version = ''; // empty string to avoid regexp issues
-	process.versions = {};
-	
-	function noop() {}
-	
-	process.on = noop;
-	process.addListener = noop;
-	process.once = noop;
-	process.off = noop;
-	process.removeListener = noop;
-	process.removeAllListeners = noop;
-	process.emit = noop;
-	
-	process.binding = function (name) {
-	    throw new Error('process.binding is not supported');
-	};
-	
-	process.cwd = function () { return '/' };
-	process.chdir = function (dir) {
-	    throw new Error('process.chdir is not supported');
-	};
-	process.umask = function() { return 0; };
-
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ },
 /* 11 */
@@ -33683,7 +33686,7 @@
 	
 	    this.authenticate = function () {
 	        return userService.signup(_this.credentials).then(function () {
-	            _this.succes();
+	            _this.success();
 	        }).catch(function (error) {
 	            _this.error = error;
 	        });
@@ -33734,7 +33737,7 @@
 	
 	function controller() {
 	    this.styles = _userAuth4.default;
-	    this.action = "signin";
+	    this.action = 'signin';
 	};
 
 /***/ },
@@ -33832,7 +33835,7 @@
 	    this.isAuthenticated = function () {
 	        return userService.isAuthenticated();
 	    };
-	}
+	};
 
 /***/ },
 /* 29 */
@@ -33995,7 +33998,8 @@
 	    bindings: {
 	        store: '<',
 	        pets: '<',
-	        del: '<'
+	        del: '<',
+	        category: '<'
 	    },
 	    controller: controller
 	};
@@ -34004,10 +34008,23 @@
 	controller.$inject = ['petService', '$state'];
 	
 	function controller(petService, $state) {
+	    var _this = this;
+	
 	    this.styles = _storePets4.default;
+	    this.sort = '';
+	    this.order = false;
 	
 	    this.goAddPet = function () {
 	        $state.go('stores.store.addPet');
+	    };
+	
+	    this.orderBy = function (category) {
+	        if (_this.sort === category) {
+	            _this.order = !_this.order;
+	        } else {
+	            _this.sort = category;
+	            _this.order = false;
+	        };
 	    };
 	};
 
@@ -34015,14 +34032,14 @@
 /* 41 */
 /***/ function(module, exports) {
 
-	module.exports = "<section>\n    <h3>Hi from \"{{$ctrl.store.name}}\"</h3>\n    <div>\n        <p>Street: {{$ctrl.store.address.street}}</p>\n        <p>City: {{$ctrl.store.address.city}}</p>\n        <p>State: {{$ctrl.store.address.state}}</p>\n    </div>\n    <div ng-class=\"$ctrl.styles.pettable\">\n        <table>\n            <thead>\n                <tr>\n                    <th>Pet Name</th>\n                    <th>Pet Type</th>\n                    <th>Delete</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"pet in $ctrl.store.pets\">\n                    <td>{{pet.name}}</td>\n                    <td>{{pet.animal}}</td>\n                    <td><button ng-click=\"$ctrl.parent.del(pet)\">Delete</button></td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n    <button ng-click=\"$ctrl.goAddPet()\">Add a new pet!</button>\n</section>";
+	module.exports = "<section>\n    <h3>Hi from \"{{$ctrl.store.name}}\"</h3>\n    <div>\n        <p>Street: {{$ctrl.store.address.street}}</p>\n        <p>City: {{$ctrl.store.address.city}}</p>\n        <p>State: {{$ctrl.store.address.state}}</p>\n    </div>\n    <div ng-class=\"$ctrl.styles.search\">\n        <h4>Search:</h4>\n        Name: <input ng-model=\"search.name\" type=\"text\">\n        <br>\n        Animal: <input ng-model=\"search.animal\" type=\"text\">\n    </div>\n    <div ng-class=\"$ctrl.styles.pettable\">\n        <table>\n            <thead>\n                <tr>\n                    <th ng-repeat=\"category in ['name', 'animal']\"\n                        ng-class=\"{ sorted: $ctrl.sort === category, desc: $ctrl.order }\"\n                        ng-click=\"$ctrl.orderBy(category)\">\n                        {{category}}\n                    </th>\n                    <th>Delete</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr ng-repeat=\"pet in $ctrl.store.pets\n                    | filter: search\n                    | orderBy: $ctrl.sort : $ctrl.order\">\n                    <td>{{pet.name}}</td>\n                    <td>{{pet.animal}}</td>\n                    <td>\n                        <button ng-click=\"$ctrl.parent.del(pet)\">X</button>\n                    </td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n    <button ng-click=\"$ctrl.goAddPet()\">Add a new pet!</button>\n</section>";
 
 /***/ },
 /* 42 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
-	module.exports = {"pettable":"_1AzJAT7k4rgfKsm33oGzGr"};
+	module.exports = {"pettable":"_1AzJAT7k4rgfKsm33oGzGr","search":"_2wJXI1kf778vBlG1H1U88K"};
 
 /***/ },
 /* 43 */,
@@ -34128,13 +34145,20 @@
 	    var _this = this;
 	
 	    this.styles = _storesAll4.default;
+	    this.sort = '';
+	    this.order = true;
 	
 	    this.toNewForm = function () {
 	        $state.go('stores.add');
 	    };
 	
-	    this.go = function () {
-	        $state.go('stores.store', { id: _this.selected._id });
+	    this.go = function (store) {
+	        $state.go('stores.store', { id: store._id });
+	    };
+	
+	    this.set = function () {
+	        _this.sort = 'name';
+	        _this.order = !_this.order;
 	    };
 	};
 
@@ -34142,13 +34166,14 @@
 /* 49 */
 /***/ function(module, exports) {
 
-	module.exports = "<h3>Check out our associated pet stores!</h3>\n<section>\n    <select\n        ng-model=\"$ctrl.selected\"\n        x-note=\"you can alias what is actually stored in ng-options for ease os use in your ng-model later\"\n        ng-options=\"stores as stores.name for stores in $ctrl.stores\">\n    </select>\n    <button ng-click=\"$ctrl.go()\">Go to Pet Store</button>\n    <button ng-click=\"$ctrl.parent.del($ctrl.selected)\">Remove</button>\n</section>\n<section>\n    <button ng-click=\"$ctrl.toNewForm()\">Add new stores here!</button>\n</section>";
+	module.exports = "<h3>Check out our associated pet stores!</h3>\n<section>\n    <button ng-click=\"$ctrl.toNewForm()\">Add new stores here!</button>\n    <div ng-class=\"$ctrl.styles.search\">\n        <h4>Search:</h4>\n        Store: <input ng-model=\"search.name\" type=\"text\">\n    </div>\n</section>\n<section ng-class=\"$ctrl.styles.storetable\">\n\n    <table>\n        <thead>\n            <tr>\n                <th ng-class=\"{sorted: $ctrl.sort, desc: $ctrl.order}\"\n                    ng-click=\"$ctrl.set()\">\n                    name\n                </th>\n                <th>go</th>\n                <th>delete</th>\n            </tr>\n        </thead>\n        <tbody>\n            <tr ng-repeat=\"store in $ctrl.stores\n                | filter : search\n                | orderBy : $ctrl.sort : $ctrl.order\">\n                <td>{{store.name}}</td>\n                <td>\n                    <button ng-click=\"$ctrl.go(store)\">Go!</button>\n                </td>\n                <td>\n                    <button ng-click=\"$ctrl.parent.del(store)\">X</button>\n                </td>\n            </tr>\n        </tbody>\n    </table>\n\n</section>\n<section>\n    <button ng-click=\"$ctrl.toNewForm()\">Add new stores here!</button>\n</section>";
 
 /***/ },
 /* 50 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
+	module.exports = {"storetable":"gmP7YetlJjL6afZvBmcjC","search":"_1-h25oOudZlutA7K38mFQL"};
 
 /***/ },
 /* 51 */,
@@ -34344,15 +34369,15 @@
 	    value: true
 	});
 	
-	var _angular = __webpack_require__(1);
+	var _angular = __webpack_require__(2);
 	
 	var _angular2 = _interopRequireDefault(_angular);
 	
-	var _camelcase = __webpack_require__(8);
+	var _camelcase = __webpack_require__(9);
 	
 	var _camelcase2 = _interopRequireDefault(_camelcase);
 	
-	var _path = __webpack_require__(9);
+	var _path = __webpack_require__(10);
 	
 	var _path2 = _interopRequireDefault(_path);
 	
@@ -34520,7 +34545,7 @@
 	 */
 	(function webpackUniversalModuleDefinition(root, factory) {
 		if(true)
-			module.exports = factory(__webpack_require__(1));
+			module.exports = factory(__webpack_require__(2));
 		else if(typeof define === 'function' && define.amd)
 			define("angular-ui-router", ["angular"], factory);
 		else if(typeof exports === 'object')
@@ -42970,7 +42995,7 @@
 	 */
 	(function webpackUniversalModuleDefinition(root, factory) {
 		if(true)
-			module.exports = factory(__webpack_require__(1));
+			module.exports = factory(__webpack_require__(2));
 		else if(typeof define === 'function' && define.amd)
 			define("angular-ui-router", ["angular"], factory);
 		else if(typeof exports === 'object')
@@ -48210,14 +48235,14 @@
 	    if (typeof module !== 'undefined' && module.exports) {
 	        // CommonJS
 	        if (typeof angular === 'undefined') {
-	            factory(__webpack_require__(1));
+	            factory(__webpack_require__(2));
 	        } else {
 	            factory(angular);
 	        }
 	        module.exports = 'ngDialog';
 	    } else if (true) {
 	        // AMD
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(1)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(2)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	    } else {
 	        // Global Variables
 	        factory(root.angular);
@@ -49253,7 +49278,7 @@
 	auth.$inject = ['$rootScope', 'userService', 'ngDialog', '$state'];
 	
 	function auth($rootScope, userService, ngDialog, $state) {
-	    $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+	    $rootScope.$on('$stateChangeStart', function (event, toState, toParams) {
 	
 	        // console.log('$scs', toState, toParams, fromState, fromParams);
 	

@@ -1,7 +1,7 @@
 auth.$inject = ['$rootScope', 'userService', 'ngDialog', '$state'];
 
 export default function auth($rootScope, userService, ngDialog, $state) {
-    $rootScope.$on('$stateChangeStart', (event, toState, toParams, fromState, fromParams) => {
+    $rootScope.$on('$stateChangeStart', (event, toState, toParams) => {
 
         // console.log('$scs', toState, toParams, fromState, fromParams);
 

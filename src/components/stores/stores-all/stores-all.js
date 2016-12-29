@@ -17,12 +17,19 @@ controller.$inject = ['storeService','$state'];
 
 function controller(Store, $state) {
     this.styles = styles;
+    this.sort = '';
+    this.order = true;
 
     this.toNewForm = () => {
         $state.go('stores.add');
     };
 
-    this.go = () => {
-        $state.go('stores.store', { id: this.selected._id });
+    this.go = store => {
+        $state.go('stores.store', { id: store._id });
+    };
+
+    this.set = () => {
+        this.sort = 'name';
+        this.order = !this.order;
     };
 };

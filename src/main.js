@@ -40,7 +40,9 @@ app.filter('titleCase', () => {
 // const link = 'https://pet-store-401.herokuapp.com/api/unauth';
 const link = 'https://pet-store-401.herokuapp.com/api';
 
-app.value('apiUrl', link);
+//constant a value but not a service and it's available before config so you can use
+//process.env
+app.constant('apiUrl', process.env.API_URL || link);
 
 app.config(http);
 app.config(routes);

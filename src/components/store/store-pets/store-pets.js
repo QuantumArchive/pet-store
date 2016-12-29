@@ -10,7 +10,8 @@ export default {
     bindings: {
         store: '<',
         pets: '<',
-        del: '<'
+        del: '<',
+        category: '<'
     },
     controller
 };
@@ -19,8 +20,19 @@ controller.$inject = ['petService','$state'];
 
 function controller(petService, $state) {
     this.styles = styles;
+    this.sort = '';
+    this.order = false;
 
     this.goAddPet = () => {
         $state.go('stores.store.addPet');
     };
+
+    this.orderBy = category => {
+        if (this.sort === category) {
+            this.order = !this.order;
+        } else {
+            this.sort = category;
+            this.order = false;
+        };
+    };  
 };

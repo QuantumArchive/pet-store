@@ -23,7 +23,7 @@ function controller(userService) {
     this.authenticate = () => {
         return userService.signup(this.credentials)
             .then(() => {
-                this.succes();
+                this.success();
             })
             .catch(error => {
                 this.error = error;

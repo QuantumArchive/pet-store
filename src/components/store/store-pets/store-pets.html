@@ -5,20 +5,33 @@
         <p>City: {{$ctrl.store.address.city}}</p>
         <p>State: {{$ctrl.store.address.state}}</p>
     </div>
+    <div ng-class="$ctrl.styles.search">
+        <h4>Search:</h4>
+        Name: <input ng-model="search.name" type="text">
+        <br>
+        Animal: <input ng-model="search.animal" type="text">
+    </div>
     <div ng-class="$ctrl.styles.pettable">
         <table>
             <thead>
                 <tr>
-                    <th>Pet Name</th>
-                    <th>Pet Type</th>
+                    <th ng-repeat="category in ['name', 'animal']"
+                        ng-class="{ sorted: $ctrl.sort === category, desc: $ctrl.order }"
+                        ng-click="$ctrl.orderBy(category)">
+                        {{category}}
+                    </th>
                     <th>Delete</th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="pet in $ctrl.store.pets">
+                <tr ng-repeat="pet in $ctrl.store.pets
+                    | filter: search
+                    | orderBy: $ctrl.sort : $ctrl.order">
                     <td>{{pet.name}}</td>
                     <td>{{pet.animal}}</td>
-                    <td><button ng-click="$ctrl.parent.del(pet)">Delete</button></td>
+                    <td>
+                        <button ng-click="$ctrl.parent.del(pet)">X</button>
+                    </td>
                 </tr>
             </tbody>
         </table>
